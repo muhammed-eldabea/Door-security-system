@@ -36,6 +36,10 @@
 #define ECU_READY_TO_RECIVE           28
 #define PASSWORD_is_acceptable        29
 #define PASSWORD_is_NOTacceptable     30
+#define UNVALID_DATA				  31
+#define LOGIN_operation               32
+#define CHANGE_PASSWORD_operation     33
+#define Catch_A_thief                 34
 
 /*=========================> Enumerations <============================*/
 
@@ -48,6 +52,7 @@
 
 /*=====================> Function Declarations <========================*/
 void HMI_welcomeScreen(void)  ;
+void HMI_LOGINOPTIONmenu(void) ;
 void HMI_EnterPassword()  ;
 void HMI_Enter_NEWPassWord(void) ;
 void HMI_check_NEWPassWord(void) ;

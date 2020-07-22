@@ -74,7 +74,7 @@ void HMI_welcomeScreen(void) {
 	UART_SendData(Check_ForSaverPassword) ;
 	if(UART_GetData() == NO_savedPassword) {
 		/*we will go to add new password*/
-		G_funID = 2 ;
+		G_funID = 3 ;
 	}
 	else{
 		/*we will go to enter a old password*/
@@ -82,6 +82,47 @@ void HMI_welcomeScreen(void) {
 	}
 
 }
+
+void HMI_LOGINOPTIONmenu(void){
+
+	/*--------------------------------------------------------------------------------------
+	[FUNCTION NAME] :  HMI_LOGINOPTIONmenu()
+
+	[DESRIPTION]   : show option menu for the user in case of we have  a saved password
+						>> it will ask user to select between tow option :
+						 1-> press on to login
+						 2-> press 2 to change the password
+
+
+	[Function ID]  : 1
+	[ARGUMENT(S)]  :
+	   [IN]  :void
+	   [OUT] : void
+	[Return]      : void
+	---------------------------------------------------------------------------------------*/
+	unsigned char  signal = 0 ;
+
+	/*clear the screen and Display the instruction */
+	LCD_clearSreen() ;
+	lcd_DisplayStringInRow_colm("press <1> to login ", 0, 3) ;
+	lcd_DisplayStringInRow_colm("press <2> to change the password ", 1, 3) ;
+
+	/*wait for pressed KEY time */
+	_delay_ms(200) ;
+	signal = KeyPad_getPressedKey() ;
+
+	if (signal == 1){
+	UART_SendData(LOGIN_operation) ;
+	G_funID = 2 ;
+
+	}
+	else if (signal == CHANGE_PASSWORD_operation) {
+		UART_SendData(CHANGE_PASSWORD_operation) ;
+		G_funID = 3 ;
+	}
+
+}
+
 
 
 void HMI_EnterPassword() {
@@ -97,12 +138,17 @@ void HMI_EnterPassword() {
 	 	 	 	 	 	 to call the police
 						>> it will get her from the HMI_welcomeScreen()
 						>> or by the function it self in case a wrong password
-	[Function ID]  : 1
+	[Function ID]  : 2
 	[ARGUMENT(S)]  :
 	   [IN]  :void
 	   [OUT] : void
 	[Return]      : void
 	---------------------------------------------------------------------------------------*/
+
+	/*this variable used to detrminate how many time the user
+	 * enter a wrong password if he enter it three times wrong
+	 *  a thieve alert will be run  */
+	static unsigned char PASSWORD_WRING_COUNTER = 0  ;
 
 	LCD_DisplyString("Enter your password to login") ;
 	LCD_clearSreen() ;
@@ -130,26 +176,34 @@ void HMI_EnterPassword() {
 		LCD_DisplyString("WELCOME") ;
 		LCD_clearSreen() ;
 		LCD_DisplyString("DoOr is Opening ") ;
+		G_funID =0 ;
 	}
 
 	else {
 
-		if (KEY == WRONG_PASSWORD){
+		if ((KEY == WRONG_PASSWORD )&& ((PASSWORD_WRING_COUNTER %3)  != 0  )){
 			LCD_DisplyString("Wrong password ") ;
 			_delay_ms(200) ;
 			lcd_clearScreen() ;
-			G_funID = 1 ;
+			PASSWORD_WRING_COUNTER++ ;
+			G_funID = 2 ;
 
 		}
 
-		else{
+		else if (KEY == Catch_A_thief){
 			LCD_DisplyString("YOU ARE A THIEF !! ") ;
 			_delay_ms(200) ;
 			lcd_clearScreen() ;
+			PASSWORD_WRING_COUNTER = 0 ;
 			LCD_DisplyString("I will call police") ;
 			lcd_clearScreen() ;
 			_delay_ms(200) ;
 			LCD_DisplyString("YOU ARE A THIEF !! ") ;
+			/*wait for Buzzer */
+			_delay_ms(500) ;
+			_delay_ms(500) ;
+			_delay_ms(500) ;
+			G_funID = 0 ;
 
 		}
 
@@ -168,7 +222,7 @@ void HMI_Enter_NEWPassWord(void){
 						3- send data byte by byte
 						4-Go to Check new password
 
-	[Function ID]  : 2
+	[Function ID]  : 3
 	[ARGUMENT(S)]  :
 	   [IN]  :void
 	   [OUT] : void
@@ -197,7 +251,7 @@ void HMI_Enter_NEWPassWord(void){
 	}
 
 
-	G_funID = 3 ;
+	G_funID = 4 ;
 
 
 }
@@ -213,7 +267,7 @@ void HMI_check_NEWPassWord(void){
 						3- send data byte by byte
 						4-Go to Check new password
 
-	[Function ID]  : 2
+	[Function ID]  : 4
 	[ARGUMENT(S)]  :
 	   [IN]  :void
 	   [OUT] : void
@@ -241,12 +295,13 @@ void HMI_check_NEWPassWord(void){
 		_delay_ms(300) ;
 	}
 
-	if (UART_GetData() == VALID_DATA){
+	unsigned char Key = UART_GetData() ;
+	if (Key == VALID_DATA){
 		G_funID = 1 ;
 	}
-	else
+	else if (Key == UNVALID_DATA)
 	{
-		G_funID = 2 ;
+		G_funID = 0 ;
 	}
 
 }
@@ -259,7 +314,7 @@ void HMI_CHECKoldpassword () {
 					change the old one if password is Write it
 					will go the ENTER new password  if it it Wrong  it will ask the user to
 
-	[Function ID]  : 2
+	[Function ID]  : 5
 	[ARGUMENT(S)]  :
 	   [IN]  :void
 	   [OUT] : void
@@ -291,7 +346,7 @@ void HMI_CHECKoldpassword () {
 	unsigned char key=UART_GetData() ;
 	if (key == PASSWORD_is_acceptable){
 		LCD_DisplyString("Password is changed successfully") ;
-		G_funID = 2 ; /*got to enter new password*/
+		G_funID = 3 ; /*got to enter new password*/
 	}
 	else if (key == PASSWORD_is_NOTacceptable){
 		LCD_DisplyString("a wrong password is entered ") ;
