@@ -19,11 +19,74 @@
  * =================================================================== */
 
 /*a variable used to switch between function */
-unsigned char G_funID = 0 ;
+volatile unsigned char G_funID = 0 ;
+
+/*create an array of pointer to function
+ *
+ *  */
+
+/*===========================================================
+ *
+ *
+ * 		 ************ 			 **************************
+ * 	    | Function ID | 		|      Function name       |
+ * 		 ************            **************************
+ * 		     0						HMI_welcomeScreen
+ * 			 1 						HMI_LOGINOPTIONmenu
+ * 		     2 						HMI_EnterPassword
+ * 		     3						HMI_Enter_NEWPassWord
+ * 		     4						HMI_check_NEWPassWord
+ * 		     5						HMI_CHECKoldpassword
+ *
+ * =========================================================== */
 
 
 
+void (*PtrToFunc[6])(void) = {HMI_welcomeScreen,HMI_LOGINOPTIONmenu,
+		HMI_EnterPassword,
+		HMI_Enter_NEWPassWord,
+		HMI_check_NEWPassWord,
+		HMI_CHECKoldpassword} ;
 
+
+/* ==================================================================== *
+      ------------> Super loop and main application<---------------
+ * ==================================================================== */
+
+
+int main (void ) {
+	/*configuration for the UART module */
+	UART_configuration uartconfig = {UART_TXRXmode,
+			Uart_AsynchrouncousOperationModeDoubleSpeedMode
+	,UART_1BITStop,UART_EnableParityEvenParity,UART_8_bit,
+	UART_fallingXCKedgeRX} ;
+
+	/*initialize the UART with given configuration*/
+	UART_init(&uartconfig) ;
+
+	/*LCD initialization
+	 *
+	 * used Port
+	 *    >> PORTC
+	 *    >> PORTD
+	 *
+	 * */
+
+	LCD_init() ;
+
+
+while(1){
+
+	/*the operation will run with Func_id = 0
+	 *  it will start with the
+	 *  HMI_welcome screen
+	 * */
+
+	(*PtrToFunc[G_funID])() ;
+
+}
+
+}
 
 /* ==================================================================== *
       ----------------->Functions Definitions<--------------------
@@ -112,8 +175,8 @@ void HMI_LOGINOPTIONmenu(void){
 	signal = KeyPad_getPressedKey() ;
 
 	if (signal == 1){
-	UART_SendData(LOGIN_operation) ;
-	G_funID = 2 ;
+		UART_SendData(LOGIN_operation) ;
+		G_funID = 2 ;
 
 	}
 	else if (signal == CHANGE_PASSWORD_operation) {
